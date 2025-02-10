@@ -1,5 +1,6 @@
 "use client"
 
+import { useState } from "react";
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Checkbox } from "@/components/ui/checkbox"
@@ -11,13 +12,45 @@ import { db } from "@/lib/firebase"
 import { ref, push } from "firebase/database"
 
 export default function RegistrationForm() {
+  const [emailError, setEmailError] =  useState("");
+  const [consentError, setConsentError] = useState("");
+  const [isConsentChecked, setIsConsentChecked] = useState(false);
+  const [loading, setLoading] = useState(false);
+  
+  const validateEmail = (email: string) => {
+    const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailPattern.test(email);
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+    setLoading(true);
+
     // Get form data
     const formData = new FormData(e.target as HTMLFormElement);
+    const email = formData.get("email") as string;
+
+    // Validate email format
+    if (!validateEmail(email)) {
+      setEmailError("Please enter a valid email address.");
+      setLoading(false);
+      return;
+    } else {
+      setEmailError(""); // Clear error if email is valid
+    }
+
+    // Validate consent checkbox
+    if (!isConsentChecked) {
+      setConsentError("You must agree to the Consent & Acknowledgment.");
+      setLoading(false);
+      return;
+    } else {
+      setConsentError(""); // Clear error if consent is checked
+    }
+    
+    // Get form data
     const playerData = {
-      player: formData.get('username'),
+      username: formData.get('username'),
       name: formData.get('name'),
       email: formData.get('email'),
       isLeftHand: formData.get('handSwing') === 'left'
@@ -29,7 +62,7 @@ export default function RegistrationForm() {
       await push(playersRef, playerData);
       
       // Show success message with template literal
-      alert(`Registration successful! Remember your username ${playerData.player} for registration later.`);
+      alert(`Registration successful! Remember your username ${playerData.username} for registration later.`);
       
       // Reset form
       (e.target as HTMLFormElement).reset();
@@ -37,6 +70,8 @@ export default function RegistrationForm() {
       console.error('Error submitting form:', error);
       alert('Error submitting form. Please try again.');
     }
+
+    setLoading(false);
   };
 
   return (
@@ -51,7 +86,7 @@ export default function RegistrationForm() {
               alt="ECCO Golf" 
               width={150} 
               height={32} 
-              className="mb-2 w-32 sm:w-[150px] filter brightness-0 invert" 
+              className="mb-10 w-60 sm:w-[180px] filter brightness-0 invert" 
             />
             </div>
 
@@ -61,10 +96,8 @@ export default function RegistrationForm() {
                 <Label htmlFor="username" className="text-white">
                 </Label>
                 <Input 
-                  id="username" 
-                  name="username"
-                  placeholder="Username"
-                  className="bg-transparent border-white/20 text-white placeholder:text-white/50 text-sm h-8 sm:h-9" 
+                  id="username" name="username" required placeholder="Username*"
+                  className="bg-transparent border-white/20 text-white placeholder:text-white/50" 
                 />
               </div>
 
@@ -72,10 +105,8 @@ export default function RegistrationForm() {
                 <Label htmlFor="name" className="text-white">
                 </Label>
                 <Input 
-                  id="name" 
-                  name="name"
-                  placeholder="Name"
-                  className="bg-transparent border-white/20 text-white placeholder:text-white/50 text-sm h-8 sm:h-9" 
+                  id="name" name="name" placeholder="Name"
+                  className="bg-transparent border-white/20 text-white placeholder:text-white/50" 
                 />
               </div>
 
@@ -83,11 +114,8 @@ export default function RegistrationForm() {
                 <Label htmlFor="email" className="text-white">
                 </Label>
                 <Input
-                  id="email"
-                  name="email"
-                  type="email"
-                  placeholder="E-mail"
-                  className="bg-transparent border-white/20 text-white placeholder:text-white/50 text-sm h-8 sm:h-9"
+                  id="email" name="email" type="email" placeholder="E-mail*"
+                  className="bg-transparent border-white/20 text-white placeholder:text-white/50"
                 />
               </div>
 
@@ -95,15 +123,12 @@ export default function RegistrationForm() {
                 <Label htmlFor="contact" className="text-white">
                 </Label>
                 <Input
-                  id="contact"
-                  type="tel"
-                  placeholder="Contact Number"
-                  className="bg-transparent border-white/20 text-white placeholder:text-white/50"
+                 id="contact" type="tel" placeholder="Contact Number" className="bg-transparent border-white/20 text-white placeholder:text-white/50"
                 />
               </div>
 
-              {/* Hand Swing Preference */}
-              <div className="space-y-1">
+               {/* Hand Swing Preference */}
+               <div className="space-y-1">
                 <Label className="text-white font-[700] text-sm sm:text-base">
                   What is your preferred hand swing?
                 </Label>
@@ -171,7 +196,7 @@ export default function RegistrationForm() {
               {/* Consent */}
               <div className="space-y-4 mt-8">
                 <p className="text-white font-[700] text-sm sm:text-base">
-                  Consent and Acknowledgment
+                  Consent & Acknowledgment
                 </p>
                 <p className="text-[10px] sm:text-xs text-white/90">
                   By submitting this form, I confirm that I have read and understood the Campaign Terms & Conditions and the
@@ -182,17 +207,21 @@ export default function RegistrationForm() {
                 <div className="flex items-center space-x-2">
                   <Checkbox
                     id="consent"
+                    checked={isConsentChecked}
+                    onCheckedChange={(checked) => setIsConsentChecked(Boolean(checked))}
                     className="border-[#f4a460] data-[state=checked]:bg-[#f4a460] data-[state=checked]:text-white"
                   />
                   <Label htmlFor="consent" className="text-white font-[700]">
                     I agree to the Consent & Acknowledgment
                   </Label>
                 </div>
+                {consentError && <p className="text-red-400 text-xs">{consentError}</p>}
               </div>
 
               {/* Submit Button */}
               <div className="flex justify-center pt-2">
-                <Button className="w-28 sm:w-32 bg-[#f4a460] hover:bg-[#f4a460]/90 text-white text-xs sm:text-sm h-8">
+                <Button 
+                type="submit" className="w-28 sm:w-32 bg-[#f4a460] hover:bg-[#f4a460]/90 text-white text-s h-10" disabled={loading}>
                   SUBMIT
                 </Button>
               </div>
