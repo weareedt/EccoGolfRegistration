@@ -117,6 +117,7 @@ export default function RegistrationForm() {
                   id="email" name="email" type="email" placeholder="E-mail*"
                   className="bg-transparent border-white/20 text-white placeholder:text-white/50"
                 />
+                {emailError && <p className="text-red-400 text-xs">{emailError}</p>}
               </div>
 
               <div className="space-y-2">
