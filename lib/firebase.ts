@@ -15,15 +15,12 @@ const firebaseConfig = {
 };
 
 // Initialize Firebase
-let firebase_app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0];
+const firebase_app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0];
 
 // Initialize Realtime Database with explicit URL
 const db = getDatabase(firebase_app);
 
 // Initialize Analytics (only in browser)
-let analytics = null;
-if (typeof window !== 'undefined') {
-  analytics = getAnalytics(firebase_app);
-}
+const analytics = typeof window !== 'undefined' ? getAnalytics(firebase_app) : null;
 
-export { firebase_app, db, analytics }; 
+export { firebase_app, db, analytics };
