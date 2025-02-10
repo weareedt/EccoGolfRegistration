@@ -107,7 +107,7 @@ export default function RegistrationForm() {
                 <Label className="text-white font-[700] text-sm sm:text-base">
                   What is your preferred hand swing?
                 </Label>
-                <RadioGroup name="handSwing" defaultValue="right" className="flex space-x-4">
+                <RadioGroup name="handSwing" defaultValue="left" className="flex space-x-4">
                   <div className="flex items-center space-x-2">
                     <RadioGroupItem 
                       value="left" 
