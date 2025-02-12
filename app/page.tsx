@@ -9,7 +9,7 @@ import { Label } from "@/components/ui/label"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import Image from "next/image"
 import { db } from "@/lib/firebase"
-import { ref, push, query, get, orderByChild, equalTo, set } from "firebase/database";
+import { ref, push, query, get, orderByChild, equalTo } from "firebase/database";
 
 export default function RegistrationForm() { // State to store players data  
   const [errors, setErrors] = useState({
