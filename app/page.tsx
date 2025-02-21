@@ -1,4 +1,4 @@
-"use client"
+"use client";
 
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
@@ -13,7 +13,6 @@ import { db } from "@/lib/firebase";
 import { ref, push, query, get, orderByChild, equalTo } from "firebase/database";
 
 export default function RegistrationForm() {
-
   const [formValues, setFormValues] = useState({
     username: "",
     name: "",
@@ -30,7 +29,6 @@ export default function RegistrationForm() {
     checkbox: "",
   });
 
-  // Real-time field validity states
   const [fieldValidity, setFieldValidity] = useState({
     username: false,
     name: false,
@@ -42,29 +40,27 @@ export default function RegistrationForm() {
   const [isConsentChecked, setIsConsentChecked] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  const validateEmail = (email: string) => {
-    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
-  };
+  const validateEmail = (email: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 
   // Update fieldValidity as formValues change
   useEffect(() => {
     setFieldValidity({
       username: formValues.username.trim().length >= 3, // min 3 chars
-      name:
-        formValues.name.trim().length > 0 &&
-        formValues.name.length <= 20, // 1-20 chars
+      name: formValues.name.trim().length > 0 && formValues.name.length <= 20, // 1-20 chars
       email: validateEmail(formValues.email.trim()),
       contactNumber: formValues.contactNumber.trim().length >= 8, // min 8 digits
     });
   }, [formValues]);
 
+  // Determine if form can be submitted
   const canSubmit =
-  fieldValidity.username &&
-  fieldValidity.name &&
-  fieldValidity.email &&
-  fieldValidity.contactNumber;
+    fieldValidity.username &&
+    fieldValidity.name &&
+    fieldValidity.email &&
+    fieldValidity.contactNumber;
+    
 
-
+  // Handle text input changes
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormValues((prev) => ({
@@ -73,21 +69,18 @@ export default function RegistrationForm() {
     }));
   };
 
+  // Handle ECCO Products checkbox logic
   const handleCheckboxChange = (value: string) => {
     setOwnEccoProducts((prev) =>
-      value === "No, I have never tried ECCO products before"
-        ? [value]
+      value === "None"
+        ? [value] // If "None" is checked, clear other selections
         : prev.includes(value)
         ? prev.filter((item) => item !== value)
-        : [
-            ...prev.filter(
-              (item) => item !== "No, I have never tried ECCO products before"
-            ),
-            value,
-          ]
+        : [...prev.filter((item) => item !== "None"), value]
     );
   };
 
+  // Form submission handler
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -102,11 +95,8 @@ export default function RegistrationForm() {
       checkbox: "",
     });
 
-    // Basic validations
     let hasError = false;
     const newErrors = { ...errors };
-
-    // Grab data from formValues directly
     const { username, name, email, contactNumber } = formValues;
 
     // 1. Username
@@ -162,11 +152,7 @@ export default function RegistrationForm() {
 
     try {
       // Check if username already exists in Firebase
-      const usernameQuery = query(
-        ref(db, "players"),
-        orderByChild("username"),
-        equalTo(username.trim())
-      );
+      const usernameQuery = query(ref(db, "players"), orderByChild("username"), equalTo(username.trim()));
       const snapshot = await get(usernameQuery);
       if (snapshot.exists()) {
         setErrors((prev) => ({
@@ -177,7 +163,7 @@ export default function RegistrationForm() {
         return;
       }
 
-      // If all good, push data
+      // Push data to Firebase
       await push(ref(db, "players"), {
         username: username.trim(),
         name: name.trim(),
@@ -185,23 +171,15 @@ export default function RegistrationForm() {
         contactNumber: contactNumber.trim(),
         agreeWithConsent: isConsentChecked,
         preferredHandSwing:
-          (e.target as HTMLFormElement).handSwing.value === "left"
-            ? "Left"
-            : "Right",
+          (e.target as HTMLFormElement).handSwing.value === "left" ? "Left" : "Right",
         ownEccoProducts,
       });
 
-      // Success
       alert(`Registration successful! Remember your username: ${username}`);
 
       // Reset the form
       (e.target as HTMLFormElement).reset();
-      setFormValues({
-        username: "",
-        name: "",
-        email: "",
-        contactNumber: "",
-      });
+      setFormValues({ username: "", name: "", email: "", contactNumber: "" });
       setOwnEccoProducts([]);
       setIsConsentChecked(false);
     } catch (error) {
@@ -230,7 +208,6 @@ export default function RegistrationForm() {
 
             {/* -- FIELDS -- */}
             <div className="space-y-4">
-
               {/* Username */}
               <div className="space-y-1">
                 <div className="relative">
@@ -243,7 +220,6 @@ export default function RegistrationForm() {
                     value={formValues.username}
                     onChange={handleInputChange}
                   />
-                  {/* Check Icon inside same div */}
                   {fieldValidity.username && (
                     <div className="absolute right-2 top-1/2 -translate-y-1/2">
                       <CheckIcon isValid />
@@ -267,7 +243,6 @@ export default function RegistrationForm() {
                     value={formValues.name}
                     onChange={handleInputChange}
                   />
-                  {/* Check Icon */}
                   {fieldValidity.name && (
                     <div className="absolute right-2 top-1/2 -translate-y-1/2">
                       <CheckIcon isValid />
@@ -291,7 +266,6 @@ export default function RegistrationForm() {
                     value={formValues.email}
                     onChange={handleInputChange}
                   />
-                  {/* Check Icon */}
                   {fieldValidity.email && (
                     <div className="absolute right-2 top-1/2 -translate-y-1/2">
                       <CheckIcon isValid />
@@ -315,7 +289,6 @@ export default function RegistrationForm() {
                     value={formValues.contactNumber}
                     onChange={handleInputChange}
                   />
-                  {/* Check Icon */}
                   {fieldValidity.contactNumber && (
                     <div className="absolute right-2 top-1/2 -translate-y-1/2">
                       <CheckIcon isValid />
@@ -323,9 +296,7 @@ export default function RegistrationForm() {
                   )}
                 </div>
                 {errors.contactNumber && (
-                  <p className="text-red-400 text-xs">
-                    {errors.contactNumber}
-                  </p>
+                  <p className="text-red-400 text-xs">{errors.contactNumber}</p>
                 )}
               </div>
 
@@ -371,59 +342,22 @@ export default function RegistrationForm() {
               {/* ECCO Products */}
               <div className="space-y-2">
                 <Label className="text-white font-[700] text-sm sm:text-base">
-                  Do you own any ECCO products?
+                  Which ECCO products do you own?
                 </Label>
                 <div className="space-y-2">
-                  <div className="flex items-center space-x-2">
-                    <Checkbox
-                      id="shoes"
-                      name="ownEccoProducts"
-                      checked={ownEccoProducts.includes(
-                        "Yes, I own ECCO shoes"
-                      )}
-                      onCheckedChange={() =>
-                        handleCheckboxChange("Yes, I own ECCO shoes")
-                      }
-                      className="border-[#f4a460] data-[state=checked]:bg-[#f4a460] data-[state=checked]:text-white"
-                    />
-                    <Label htmlFor="shoes" className="text-white">
-                      Yes, I own ECCO shoes
-                    </Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <Checkbox
-                      id="bags"
-                      name="ownEccoProducts"
-                      checked={ownEccoProducts.includes(
-                        "Yes, I own ECCO bags"
-                      )}
-                      onCheckedChange={() =>
-                        handleCheckboxChange("Yes, I own ECCO bags")
-                      }
-                      className="border-[#f4a460] data-[state=checked]:bg-[#f4a460] data-[state=checked]:text-white"
-                    />
-                    <Label htmlFor="bags" className="text-white">
-                      Yes, I own ECCO bags
-                    </Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <Checkbox
-                      id="none"
-                      name="noneProducts"
-                      checked={ownEccoProducts.includes(
-                        "No, I have never tried ECCO products before"
-                      )}
-                      onCheckedChange={() =>
-                        handleCheckboxChange(
-                          "No, I have never tried ECCO products before"
-                        )
-                      }
-                      className="border-[#f4a460] data-[state=checked]:bg-[#f4a460] data-[state=checked]:text-white"
-                    />
-                    <Label htmlFor="none" className="text-white">
-                      No, I have never tried ECCO products before
-                    </Label>
-                  </div>
+                  {["Golf Shoe", "Non-Golf Shoe", "Bag", "None"].map((item) => (
+                    <div key={item} className="flex items-center space-x-2">
+                      <Checkbox
+                        id={item}
+                        checked={ownEccoProducts.includes(item)}
+                        onCheckedChange={() => handleCheckboxChange(item)}
+                        className="border-[#f4a460] data-[state=checked]:bg-[#f4a460] data-[state=checked]:text-white"
+                      />
+                      <Label htmlFor={item} className="text-white">
+                        {item}
+                      </Label>
+                    </div>
+                  ))}
                 </div>
                 {errors.checkbox && (
                   <p className="text-red-400 text-xs">{errors.checkbox}</p>
@@ -436,20 +370,17 @@ export default function RegistrationForm() {
                   Consent & Acknowledgment
                 </p>
                 <p className="text-[10px] sm:text-xs text-white/90">
-                  By submitting this form, I confirm that I have read and
-                  understood the Campaign Terms & Conditions and the Privacy
-                  Policy. I consent to the collection and use of my personal data
-                  by ECCO China Wholesale Holding(s) PTE LTD for the purpose of
-                  participating in the golf game event and receiving
-                  event-related communications.
+                  By submitting this form, I confirm that I have read and understood
+                  the Campaign Terms & Conditions and the Privacy Policy. I consent
+                  to the collection and use of my personal data by ECCO China Wholesale
+                  Holding(s) PTE LTD for the purpose of participating in the golf game
+                  event and receiving event-related communications.
                 </p>
                 <div className="flex items-center space-x-2">
                   <Checkbox
                     id="consent"
                     checked={isConsentChecked}
-                    onCheckedChange={(checked) =>
-                      setIsConsentChecked(Boolean(checked))
-                    }
+                    onCheckedChange={(checked) => setIsConsentChecked(Boolean(checked))}
                     className="border-[#f4a460] data-[state=checked]:bg-[#f4a460] data-[state=checked]:text-white"
                   />
                   <Label htmlFor="consent" className="text-white font-[700]">
@@ -463,13 +394,13 @@ export default function RegistrationForm() {
 
               {/* Submit Button */}
               <div className="flex justify-center pt-2">
-              <Button
-              type="submit"
-              disabled={loading || !canSubmit}    // <-- disable if not valid
-              className="w-28 sm:w-32 bg-[#f4a460] hover:bg-[#f4a460]/90 text-white h-10"
-            >
-              {loading ? "Submitting..." : "SUBMIT"}
-            </Button>
+                <Button
+                  type="submit"
+                  disabled={loading || !canSubmit}
+                  className="w-28 sm:w-32 bg-[#f4a460] hover:bg-[#f4a460]/90 text-white h-10"
+                >
+                  {loading ? "Submitting..." : "SUBMIT"}
+                </Button>
               </div>
             </div>
           </form>
