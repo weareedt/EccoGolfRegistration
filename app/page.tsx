@@ -163,8 +163,7 @@ export default function RegistrationForm() {
         return;
       }
 
-     // Push player data and store the reference
-      const newPlayerRef = await push(ref(db, "players"), {
+     await push(ref(db, "players"), {
         username: username.trim(),
         name: name.trim(),
         email: email.trim(),
@@ -173,13 +172,8 @@ export default function RegistrationForm() {
         preferredHandSwing:
           (e.target as HTMLFormElement).handSwing.value === "left" ? "Left" : "Right",
         ownEccoProducts,
+        scores:[],
       });
-      
-      // Create an empty scores node under the new player
-      if (newPlayerRef.key) {
-        await push(ref(db, `players/${newPlayerRef.key}/scores`), {});
-      }
-
       
       alert(`Registration successful! Remember your username: ${username}`);
 
