@@ -173,6 +173,7 @@ export default function RegistrationForm() {
         preferredHandSwing:
           (e.target as HTMLFormElement).handSwing.value === "left" ? "Left" : "Right",
         ownEccoProducts,
+        scores:[},
       });
 
       alert(`Registration successful! Remember your username: ${username}`);
