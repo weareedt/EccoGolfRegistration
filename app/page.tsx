@@ -173,9 +173,10 @@ export default function RegistrationForm() {
         preferredHandSwing:
           (e.target as HTMLFormElement).handSwing.value === "left" ? "Left" : "Right",
         ownEccoProducts,
-        scores:[],
       });
-
+      // Create an empty scores nodes
+      await push(ref(db, `players/${newPlayerRef.key}/scores`), null);
+      
       alert(`Registration successful! Remember your username: ${username}`);
 
       // Reset the form
