@@ -163,8 +163,8 @@ export default function RegistrationForm() {
         return;
       }
 
-      // Push data to Firebase
-      await push(ref(db, "players"), {
+     // Push player data and store the reference
+      const newPlayerRef = await push(ref(db, "players"), {
         username: username.trim(),
         name: name.trim(),
         email: email.trim(),
@@ -174,8 +174,12 @@ export default function RegistrationForm() {
           (e.target as HTMLFormElement).handSwing.value === "left" ? "Left" : "Right",
         ownEccoProducts,
       });
-      // Create an empty scores nodes
-      await push(ref(db, `players/${newPlayerRef.key}/scores`), null);
+      
+      // Create an empty scores node under the new player
+      if (newPlayerRef.key) {
+        await push(ref(db, `players/${newPlayerRef.key}/scores`), {});
+      }
+
       
       alert(`Registration successful! Remember your username: ${username}`);
 
