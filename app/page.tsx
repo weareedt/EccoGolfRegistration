@@ -307,7 +307,7 @@ export default function RegistrationForm() {
                 </Label>
                 <RadioGroup
                   name="handSwing"
-                  defaultValue="left"
+                  defaultValue="right"
                   className="flex space-x-4"
                 >
                   <div className="flex items-center space-x-2">
