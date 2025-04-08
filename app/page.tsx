@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import Image from "next/image";
 import { db } from "@/lib/firebase";
-import { ref, push, query, get, orderByChild, equalTo } from "firebase/database";
+import { ref, push } from "firebase/database";
 
 export default function RegistrationForm() {
   const [formValues, setFormValues] = useState({
