@@ -14,14 +14,12 @@ import { ref, push, query, get, orderByChild, equalTo } from "firebase/database"
 
 export default function RegistrationForm() {
   const [formValues, setFormValues] = useState({
-    username: "",
     name: "",
     email: "",
     contactNumber: "",
   });
 
   const [errors, setErrors] = useState({
-    username: "",
     name: "",
     email: "",
     contactNumber: "",
@@ -30,7 +28,6 @@ export default function RegistrationForm() {
   });
 
   const [fieldValidity, setFieldValidity] = useState({
-    username: false,
     name: false,
     email: false,
     contactNumber: false,
@@ -45,7 +42,6 @@ export default function RegistrationForm() {
   // Update fieldValidity as formValues change
   useEffect(() => {
     setFieldValidity({
-      username: formValues.username.trim().length >= 3, // min 3 chars
       name: formValues.name.trim().length > 0 && formValues.name.length <= 20, // 1-20 chars
       email: validateEmail(formValues.email.trim()),
       contactNumber: formValues.contactNumber.trim().length >= 8, // min 8 digits
@@ -54,12 +50,10 @@ export default function RegistrationForm() {
 
   // Determine if form can be submitted
   const canSubmit =
-    fieldValidity.username &&
     fieldValidity.name &&
     fieldValidity.email &&
     fieldValidity.contactNumber;
     
-
   // Handle text input changes
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -87,7 +81,6 @@ export default function RegistrationForm() {
 
     // Clear old errors
     setErrors({
-      username: "",
       name: "",
       email: "",
       contactNumber: "",
@@ -97,18 +90,29 @@ export default function RegistrationForm() {
 
     let hasError = false;
     const newErrors = { ...errors };
-    const { username, name, email, contactNumber } = formValues;
+    const { name, email, contactNumber } = formValues;
 
-    // 1. Username
-    if (!username.trim()) {
-      newErrors.username = "Username is required";
-      hasError = true;
-    } else if (username.trim().length < 3) {
-      newErrors.username = "Username must be at least 3 characters";
-      hasError = true;
+    // Check if name already exists in database
+    try {
+      const playersRef = ref(db, "players");
+      const nameQuery = query(playersRef, orderByChild("name"), equalTo(name.trim()));
+      const snapshot = await get(nameQuery);
+      
+      if (snapshot.exists()) {
+        newErrors.name = "This name is already registered";
+        hasError = true;
+        setErrors(newErrors);
+        setLoading(false);
+        return;
+      }
+    } catch (error) {
+      console.error("Error checking name:", error);
+      alert("Error checking name availability. Please try again.");
+      setLoading(false);
+      return;
     }
 
-    // 2. Name
+    // 1. Name
     if (!name.trim()) {
       newErrors.name = "Name is required";
       hasError = true;
@@ -117,13 +121,13 @@ export default function RegistrationForm() {
       hasError = true;
     }
 
-    // 3. Email
+    // 2. Email
     if (!email || !validateEmail(email.trim())) {
       newErrors.email = "Please enter a valid email";
       hasError = true;
     }
 
-    // 4. Contact Number
+    // 3. Contact Number
     if (!contactNumber.trim()) {
       newErrors.contactNumber = "Contact number is required";
       hasError = true;
@@ -132,13 +136,13 @@ export default function RegistrationForm() {
       hasError = true;
     }
 
-    // 5. ECCO products
+    // 4. ECCO products
     if (ownEccoProducts.length === 0) {
       newErrors.checkbox = "Please select at least one ECCO product";
       hasError = true;
     }
 
-    // 6. Consent
+    // 5. Consent
     if (!isConsentChecked) {
       newErrors.consent = "You must agree to the Consent & Acknowledgment";
       hasError = true;
@@ -151,35 +155,20 @@ export default function RegistrationForm() {
     }
 
     try {
-      // Check if username already exists in Firebase
-      const usernameQuery = query(ref(db, "players"), orderByChild("username"), equalTo(username.trim()));
-      const snapshot = await get(usernameQuery);
-      if (snapshot.exists()) {
-        setErrors((prev) => ({
-          ...prev,
-          username: "Username already exists",
-        }));
-        setLoading(false);
-        return;
-      }
-
-     await push(ref(db, "players"), {
-        username: username.trim(),
+      await push(ref(db, "players"), {
         name: name.trim(),
         email: email.trim(),
         contactNumber: contactNumber.trim(),
         agreeWithConsent: isConsentChecked,
-        preferredHandSwing:
-          (e.target as HTMLFormElement).handSwing.value === "left" ? "Left" : "Right",
         ownEccoProducts,
         scores:[],
       });
       
-      alert(`Registration successful! Remember your username: ${username}`);
+      alert(`Registration successful!`);
 
       // Reset the form
       (e.target as HTMLFormElement).reset();
-      setFormValues({ username: "", name: "", email: "", contactNumber: "" });
+      setFormValues({ name: "", email: "", contactNumber: "" });
       setOwnEccoProducts([]);
       setIsConsentChecked(false);
     } catch (error) {
@@ -208,29 +197,6 @@ export default function RegistrationForm() {
 
             {/* -- FIELDS -- */}
             <div className="space-y-4">
-              {/* Username */}
-              <div className="space-y-1">
-                <div className="relative">
-                  <Input
-                    id="username"
-                    name="username"
-                    placeholder="Username (min 3 chars)"
-                    className="bg-transparent border-white/20 text-white placeholder:text-white/50 pr-8"
-                    required
-                    value={formValues.username}
-                    onChange={handleInputChange}
-                  />
-                  {fieldValidity.username && (
-                    <div className="absolute right-2 top-1/2 -translate-y-1/2">
-                      <CheckIcon isValid />
-                    </div>
-                  )}
-                </div>
-                {errors.username && (
-                  <p className="text-red-400 text-xs">{errors.username}</p>
-                )}
-              </div>
-
               {/* Name */}
               <div className="space-y-1">
                 <div className="relative">
@@ -298,45 +264,6 @@ export default function RegistrationForm() {
                 {errors.contactNumber && (
                   <p className="text-red-400 text-xs">{errors.contactNumber}</p>
                 )}
-              </div>
-
-              {/* Hand Swing Preference */}
-              <div className="space-y-2">
-                <Label className="text-white font-[700] text-sm sm:text-base">
-                  What is your preferred hand swing?
-                </Label>
-                <RadioGroup
-                  name="handSwing"
-                  defaultValue="right"
-                  className="flex space-x-4"
-                >
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem
-                      value="left"
-                      id="left"
-                      className="h-4 w-4 border-[#f4a460] text-[#f4a460] data-[state=checked]:bg-[#f4a460] data-[state=checked]:text-white"
-                    />
-                    <Label
-                      htmlFor="left"
-                      className="text-white text-xs sm:text-sm"
-                    >
-                      Left
-                    </Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem
-                      value="right"
-                      id="right"
-                      className="h-4 w-4 border-[#f4a460] text-[#f4a460] data-[state=checked]:bg-[#f4a460] data-[state=checked]:text-white"
-                    />
-                    <Label
-                      htmlFor="right"
-                      className="text-white text-xs sm:text-sm"
-                    >
-                      Right
-                    </Label>
-                  </div>
-                </RadioGroup>
               </div>
 
               {/* ECCO Products */}
