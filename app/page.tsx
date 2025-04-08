@@ -91,26 +91,6 @@ export default function RegistrationForm() {
     const newErrors = { ...errors };
     const { name, email, contactNumber } = formValues;
 
-    // Check if name already exists in database
-    try {
-      const playersRef = ref(db, "players");
-      const nameQuery = query(playersRef, orderByChild("name"), equalTo(name.trim()));
-      const snapshot = await get(nameQuery);
-      
-      if (snapshot.exists()) {
-        newErrors.name = "This name is already registered";
-        hasError = true;
-        setErrors(newErrors);
-        setLoading(false);
-        return;
-      }
-    } catch (error) {
-      console.error("Error checking name:", error);
-      alert("Error checking name availability. Please try again.");
-      setLoading(false);
-      return;
-    }
-
     // 1. Name
     if (!name.trim()) {
       newErrors.name = "Name is required";
