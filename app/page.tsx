@@ -7,7 +7,6 @@ import { CheckIcon } from "@/components/ui/check-icon";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import Image from "next/image";
 import { db } from "@/lib/firebase";
 import { ref, push, query, get, orderByChild, equalTo } from "firebase/database";
